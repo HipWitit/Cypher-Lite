@@ -16,12 +16,12 @@ jobs:
 
       - name: Install Buildozer
         run: |
-          pip3 install --user --upgrade buildozer cython virtualenv
+          pip3 install --user --upgrade buildozer virtualenv cython==0.29.33
 
       - name: Build APK with Buildozer
         run: |
           export PATH=$PATH:~/.local/bin
-          yes | buildozer android debug
+          buildozer android debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
