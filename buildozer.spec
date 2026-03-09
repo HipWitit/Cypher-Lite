@@ -3,12 +3,13 @@ title = Cypher
 package.name = cypher
 package.domain = org.lilpeachbat
 source.dir = .
+
 # Added 'spec' and 'txt' just to be safe
 source.include_exts = py,png,jpg,ttf,json,spec,txt
 version = 1.0
 
 # These are correct for your encryption app
-requirements = python3,kivy,requests,cryptography,openssl,urllib3,certifi,idna,charset-normalizer
+requirements = python3,kivy==2.3.0,requests,cryptography,openssl,urllib3,certifi,idna,charset-normalizer
 
 orientation = portrait
 fullscreen = 0
@@ -22,8 +23,8 @@ android.allow_backup = True
 # THE BIG FIX: These lines ensure the Android bouncer lets you through
 android.accept_sdk_license = True
 android.skip_update = False
-android.warn_on_root = False
 
 [buildozer]
 log_level = 2
 warn_on_root = 1
+
