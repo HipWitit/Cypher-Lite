@@ -1,3 +1,4 @@
+import os
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.core.window import Window
@@ -17,6 +18,10 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
 
+# --- APK FIX: ENSURE WE ARE IN THE RIGHT DIRECTORY FOR ASSETS ---
+# This tells the app to look inside its own installation folder for images and fonts
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
 # --- THE SACRED SETTINGS ---
 MASTER_PEPPER = "global_unicode_spice_2026"
 ROUNDS = 3
@@ -25,6 +30,12 @@ REV_MAP = {v: k for k, v in EMOJI_MAP.items()}
 
 # Lock in the background color globally
 Window.clearcolor = get_color_from_hex('#DBDCFF')
+
+# --- APK FIX: SECURE VAULT PATH LOGIC ---
+def get_vault_path():
+    # This finds the specific private folder Android allows the app to write to
+    data_dir = App.get_running_app().user_data_dir
+    return os.path.join(data_dir, 'cypher_vault.json')
 
 # --- CRYPTO HELPER FUNCTIONS ---
 def to_emoji(val): 
@@ -391,7 +402,8 @@ class LockScreen(Screen):
         raw = f"{user}:{MASTER_PEPPER}"
         correct_hash = hashlib.sha256(raw.encode()).hexdigest()[:6].upper()
         if input_code == correct_hash:
-            store = JsonStore('cypher_vault.json')
+            # FIX: Use secure path for the JSON store
+            store = JsonStore(get_vault_path())
             store.put('vip_status', approved=True)
             self.manager.current = 'main'
         else:
@@ -421,31 +433,24 @@ class CypherLayout(BoxLayout):
             self.ids.output_display.font_name = 'RobotoMono-Regular'
             self.ids.output_toggle_btn.text = "OUTPUT MODE: TEXT (TAP TO SWAP)"
 
-    # --- FIXED NATIVE ANDROID SHARE LOGIC ---
     def share_output(self):
         if self.output_text:
             shared = False
-            
             if platform == 'android':
                 try:
                     from jnius import autoclass, cast
                     PythonActivity = autoclass('org.kivy.android.PythonActivity')
                     Intent = autoclass('android.content.Intent')
                     String = autoclass('java.lang.String')
-
                     intent = Intent()
                     intent.setAction(Intent.ACTION_SEND)
-                    
-                    # ENCODING FIX: Convert Python emojis to UTF-8 for Java/Android
                     java_text = String(self.output_text.encode('utf-8'), 'UTF-8')
                     intent.putExtra(Intent.EXTRA_TEXT, java_text)
                     intent.setType("text/plain")
-
                     currentActivity = cast('android.app.Activity', PythonActivity.mActivity)
                     chooser_title = cast('java.lang.CharSequence', String("Share Cypher Chemistry"))
                     chooser = Intent.createChooser(intent, chooser_title)
                     currentActivity.startActivity(chooser)
-                    
                     shared = True
                 except Exception:
                     pass
@@ -461,10 +466,8 @@ class CypherLayout(BoxLayout):
         if not kw or not user_input:
             self.output_text = "Enter key & message."
             return
-        
         self.ids.output_display.font_name = 'NotoEmoji-Regular.ttf'
         self.ids.output_toggle_btn.text = "OUTPUT MODE: EMOJI (TAP TO SWAP)"
-
         params = get_keys_and_perms(kw, MASTER_PEPPER)
         data = user_input.encode('utf-8')
         tag = hashlib.sha256(data).digest()[:4]
@@ -472,7 +475,6 @@ class CypherLayout(BoxLayout):
         nonce_bytes = [secrets.randbelow(256) for _ in range(4)]
         prev = int.from_bytes(hashlib.sha256(bytes(nonce_bytes)).digest()[:1], 'big')
         res_list = [to_emoji(b) for b in nonce_bytes]
-        
         for byte in payload:
             current = byte ^ prev
             for r in range(ROUNDS):
@@ -480,7 +482,6 @@ class CypherLayout(BoxLayout):
                 current = (params[r]['a'] * current + params[r]['b']) % 256
             res_list.append(to_emoji(current))
             prev = current
-            
         self.output_text = " ".join(res_list)
 
     def tell(self):
@@ -489,10 +490,8 @@ class CypherLayout(BoxLayout):
         if not kw or not user_input:
             self.output_text = "Enter key & message."
             return
-            
         self.ids.output_display.font_name = 'RobotoMono-Regular'
         self.ids.output_toggle_btn.text = "OUTPUT MODE: TEXT (TAP TO SWAP)"
-
         params = get_keys_and_perms(kw, MASTER_PEPPER)
         try:
             parts = []
@@ -501,12 +500,9 @@ class CypherLayout(BoxLayout):
                 if val is None: break
                 parts.append(val)
             if len(parts) < 9: raise ValueError("Format invalid")
-            
-            nonce_ints = parts[:4]
-            ciphertext_payload = parts[4:]
+            nonce_ints, ciphertext_payload = parts[:4], parts[4:]
             prev = int.from_bytes(hashlib.sha256(bytes(nonce_ints)).digest()[:1], 'big')
             decoded_bytes = []
-            
             for current_cipher in ciphertext_payload:
                 temp = current_cipher
                 for r in reversed(range(ROUNDS)):
@@ -516,12 +512,8 @@ class CypherLayout(BoxLayout):
                 original_byte = temp ^ prev
                 decoded_bytes.append(original_byte)
                 prev = current_cipher
-                
-            final_data = bytes(decoded_bytes[:-4])
-            received_tag = bytes(decoded_bytes[-4:])
-            computed_tag = hashlib.sha256(final_data).digest()[:4]
-            
-            if computed_tag != received_tag:
+            final_data, received_tag = bytes(decoded_bytes[:-4]), bytes(decoded_bytes[-4:])
+            if hashlib.sha256(final_data).digest()[:4] != received_tag:
                 self.output_text = "Chemistry Error! Check Key."
             else:
                 self.output_text = f"Cypher Whispers: {final_data.decode('utf-8')}"
@@ -545,7 +537,8 @@ class CypherApp(App):
     def build(self):
         Builder.load_string(KV)
         wm = WindowManager()
-        store = JsonStore('cypher_vault.json')
+        # FIX: Load VIP status from the secure private path
+        store = JsonStore(get_vault_path())
         if store.exists('vip_status') and store.get('vip_status')['approved']:
             wm.current = 'main'
         else:
