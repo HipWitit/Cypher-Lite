@@ -1,0 +1,36 @@
+name: Build Cypher APK
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Get Date
+        id: get-date
+        run: |
+          echo "::set-output name=date::$(date -u +'%Y%m%d')"
+        shell: bash
+
+      - name: Cache Buildozer
+        uses: actions/cache@v2
+        with:
+          path: .buildozer
+          key: ${{ runner.os }}-buildozer-${{ github.run_id }}-${{ steps.get-date.outputs.date }}
+          restore-keys: |
+            ${{ runner.os }}-buildozer-
+
+      - name: Build with Buildozer
+        uses: ArtemSerebriakov/buildozer-action@v1
+        with:
+          buildozer_version: master
+          python_version: 3.11
+          subcommand: android debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v2
+        with:
+          name: Cypher-Debug-APK
+          path: bin/*.apk
+
