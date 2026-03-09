@@ -5,16 +5,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
       - name: Get Date
         id: get-date
         run: |
-          echo "::set-output name=date::$(date -u +'%Y%m%d')"
+          echo "date=$(date -u +'%Y%m%d')" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Cache Buildozer
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: .buildozer
           key: ${{ runner.os }}-buildozer-${{ github.run_id }}-${{ steps.get-date.outputs.date }}
@@ -22,15 +23,14 @@ jobs:
             ${{ runner.os }}-buildozer-
 
       - name: Build with Buildozer
-        uses: ArtemSerebriakov/buildozer-action@v1
+        uses: ArtemSBulgakov/buildozer-action@v1
+        id: buildozer
         with:
+          command: buildozer android debug
           buildozer_version: master
-          python_version: 3.11
-          subcommand: android debug
 
       - name: Upload APK
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: Cypher-Debug-APK
           path: bin/*.apk
-
