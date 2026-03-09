@@ -17,3 +17,6 @@ android.allow_backup = True
 # Icon and Splash (Make sure these match your filenames)
 icon.filename = CYPHER.png
 
+# AUTO ACCEPT LICENSE (This prevents the crash!)
+android.accept_sdk_license = True
+
