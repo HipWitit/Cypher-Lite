@@ -16,6 +16,11 @@ fullscreen = 0
 android.archs = arm64-v8a
 android.allow_backup = True
 
+# Explicitly pin the API and NDK to prevent Gradle/Java crashes
+android.api = 33
+android.minapi = 21
+android.ndk = 25b
+
 # TEST FIX: We are commenting this out to prove the code works first. 
 # Once you get a green checkmark, we will fix the PNG and put this back.
 # icon.filename = CYPHER.png
@@ -26,5 +31,3 @@ android.skip_update = False
 
 [buildozer]
 log_level = 2
-warn_on_root = 1
-
