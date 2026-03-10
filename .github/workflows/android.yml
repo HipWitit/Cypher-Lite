@@ -1,4 +1,4 @@
-name: Build Cypher APK
+Name: Build Cypher APK
 on: [push, pull_request]
 
 jobs:
@@ -13,6 +13,12 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev uuid-dev
+          
+          # Install Rust compiler required for the cryptography package
+          curl https://sh.rustup.rs -sSf | sh -s -- -y
+          
+          # Add Rust (Cargo) to the GitHub environment path so Buildozer can use it
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       - name: Install Buildozer
         run: |
@@ -28,4 +34,3 @@ jobs:
         with:
           name: Cypher-Debug-APK
           path: bin/*.apk
-
