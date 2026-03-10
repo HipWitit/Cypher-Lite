@@ -19,7 +19,6 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
 
 # --- APK FIX: ENSURE WE ARE IN THE RIGHT DIRECTORY FOR ASSETS ---
-# This tells the app to look inside its own installation folder for images and fonts
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # --- THE SACRED SETTINGS ---
@@ -33,7 +32,6 @@ Window.clearcolor = get_color_from_hex('#DBDCFF')
 
 # --- APK FIX: SECURE VAULT PATH LOGIC ---
 def get_vault_path():
-    # This finds the specific private folder Android allows the app to write to
     data_dir = App.get_running_app().user_data_dir
     return os.path.join(data_dir, 'cypher_vault.json')
 
@@ -404,7 +402,6 @@ class LockScreen(Screen):
         raw = f"{user}:{MASTER_PEPPER}"
         correct_hash = hashlib.sha256(raw.encode()).hexdigest()[:6].upper()
         if input_code == correct_hash:
-            # FIX: Use secure path for the JSON store
             store = JsonStore(get_vault_path())
             store.put('vip_status', approved=True)
             self.manager.current = 'main'
@@ -465,17 +462,23 @@ class CypherLayout(BoxLayout):
     def kiss(self):
         kw = self.ids.key_input.text.strip()
         user_input = self.ids.msg_input.text.strip()
+        hint = self.ids.hint_input.text.strip() # <--- THE NEW HINT GRAB
+        
         if not kw or not user_input:
             self.output_text = "Enter key & message."
             return
+            
         self.ids.output_display.font_name = 'NotoEmoji-Regular.ttf'
         self.ids.output_toggle_btn.text = "OUTPUT MODE: EMOJI (TAP TO SWAP)"
+        
         params = get_keys_and_perms(kw, MASTER_PEPPER)
         data = user_input.encode('utf-8')
         tag = hashlib.sha256(data).digest()[:4]
         payload = data + tag
+        
         nonce_bytes = [secrets.randbelow(256) for _ in range(4)]
         prev = int.from_bytes(hashlib.sha256(bytes(nonce_bytes)).digest()[:1], 'big')
+        
         res_list = [to_emoji(b) for b in nonce_bytes]
         for byte in payload:
             current = byte ^ prev
@@ -484,27 +487,41 @@ class CypherLayout(BoxLayout):
                 current = (params[r]['a'] * current + params[r]['b']) % 256
             res_list.append(to_emoji(current))
             prev = current
-        self.output_text = " ".join(res_list)
+            
+        cipher_text = " ".join(res_list)
+        
+        # Combine the hint and the emojis seamlessly
+        if hint:
+            self.output_text = f"HINT: {hint}\n\n{cipher_text}"
+        else:
+            self.output_text = cipher_text
 
     def tell(self):
         kw = self.ids.key_input.text.strip()
         user_input = self.ids.msg_input.text.strip()
+        
         if not kw or not user_input:
             self.output_text = "Enter key & message."
             return
+            
         self.ids.output_display.font_name = 'RobotoMono-Regular'
         self.ids.output_toggle_btn.text = "OUTPUT MODE: TEXT (TAP TO SWAP)"
+        
         params = get_keys_and_perms(kw, MASTER_PEPPER)
         try:
             parts = []
             for chunk in user_input.split():
                 val = from_emoji(chunk)
-                if val is None: break
-                parts.append(val)
+                # THE FIX: Just ignore normal text instead of crashing!
+                if val is not None:
+                    parts.append(val)
+                    
             if len(parts) < 9: raise ValueError("Format invalid")
+            
             nonce_ints, ciphertext_payload = parts[:4], parts[4:]
             prev = int.from_bytes(hashlib.sha256(bytes(nonce_ints)).digest()[:1], 'big')
             decoded_bytes = []
+            
             for current_cipher in ciphertext_payload:
                 temp = current_cipher
                 for r in reversed(range(ROUNDS)):
@@ -514,6 +531,7 @@ class CypherLayout(BoxLayout):
                 original_byte = temp ^ prev
                 decoded_bytes.append(original_byte)
                 prev = current_cipher
+                
             final_data, received_tag = bytes(decoded_bytes[:-4]), bytes(decoded_bytes[-4:])
             if hashlib.sha256(final_data).digest()[:4] != received_tag:
                 self.output_text = "Chemistry Error! Check Key."
@@ -539,7 +557,6 @@ class CypherApp(App):
     def build(self):
         Builder.load_string(KV)
         wm = WindowManager()
-        # FIX: Load VIP status from the secure private path
         store = JsonStore(get_vault_path())
         if store.exists('vip_status') and store.get('vip_status')['approved']:
             wm.current = 'main'
