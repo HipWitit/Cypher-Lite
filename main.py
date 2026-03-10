@@ -259,6 +259,8 @@ KV = '''
         font_name: 'RobotoMono-Regular'
         font_size: '18sp'
         multiline: True
+        # THIS IS THE MAGIC SENSOR
+        on_text: root.on_msg_text(self, self.text)
 
     Button:
         text: "KISS"
@@ -414,6 +416,26 @@ class MainScreen(Screen):
 class CypherLayout(BoxLayout):
     output_text = StringProperty("")
 
+    # --- THE BRACKET PARSER LOGIC ---
+    def on_msg_text(self, instance, value):
+        if "[" in value and "]" in value:
+            try:
+                # Find the exact text trapped inside the brackets
+                start = value.find("[") + 1
+                end = value.find("]")
+                hint_line = value[start:end].strip()
+                
+                # Everything after the closing bracket is the emoji ciphertext
+                emoji_part = value[end+1:].strip()
+                
+                # Safely move the English text up to the Hint Box
+                self.ids.hint_input.text = hint_line
+                
+                # Instantly wipe the English text from the main box to kill the tofu
+                Clock.schedule_once(lambda dt: setattr(self.ids.msg_input, 'text', emoji_part), 0)
+            except Exception:
+                pass
+
     def toggle_input_font(self):
         current_font = self.ids.msg_input.font_name
         if current_font == 'RobotoMono-Regular':
@@ -462,7 +484,7 @@ class CypherLayout(BoxLayout):
     def kiss(self):
         kw = self.ids.key_input.text.strip()
         user_input = self.ids.msg_input.text.strip()
-        hint = self.ids.hint_input.text.strip() # <--- THE NEW HINT GRAB
+        hint = self.ids.hint_input.text.strip()
         
         if not kw or not user_input:
             self.output_text = "Enter key & message."
@@ -490,9 +512,9 @@ class CypherLayout(BoxLayout):
             
         cipher_text = " ".join(res_list)
         
-        # Combine the hint and the emojis seamlessly
+        # Format the output with the new bracket delimiters
         if hint:
-            self.output_text = f"HINT: {hint}\n\n{cipher_text}"
+            self.output_text = f"[{hint}]\n\n{cipher_text}"
         else:
             self.output_text = cipher_text
 
@@ -512,7 +534,6 @@ class CypherLayout(BoxLayout):
             parts = []
             for chunk in user_input.split():
                 val = from_emoji(chunk)
-                # THE FIX: Just ignore normal text instead of crashing!
                 if val is not None:
                     parts.append(val)
                     
