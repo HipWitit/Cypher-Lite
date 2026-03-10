@@ -1,5 +1,5 @@
 [app]
-title = Cypher
+title = Cypher Lite
 package.name = cypher
 package.domain = org.lilpeachbat
 source.dir = .
@@ -21,9 +21,8 @@ android.api = 33
 android.minapi = 21
 android.ndk = 25b
 
-# TEST FIX: We are commenting this out to prove the code works first. 
-# Once you get a green checkmark, we will fix the PNG and put this back.
-# icon.filename = CYPHER.png
+# App Icon
+icon.filename = CYLI.png
 
 # THE BIG FIX: These lines ensure the Android bouncer lets you through
 android.accept_sdk_license = True
@@ -31,3 +30,4 @@ android.skip_update = False
 
 [buildozer]
 log_level = 2
+
