@@ -260,6 +260,7 @@ KV = '''
         hint_text_color: utils.get_color_from_hex('#B4A7D6')
         font_name: 'RobotoMono-Regular'
         font_size: '18sp'
+        multiline: True
 
     Button:
         text: "KISS"
@@ -338,6 +339,7 @@ KV = '''
         font_name: 'NotoEmoji-Regular.ttf'
         font_size: '18sp'
         bold: True
+        multiline: True
 
     Button:
         id: share_btn
@@ -547,4 +549,3 @@ class CypherApp(App):
 
 if __name__ == '__main__':
     CypherApp().run()
-
