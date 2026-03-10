@@ -19,10 +19,13 @@ jobs:
           
           # Add Rust (Cargo) to the GitHub environment path so Buildozer can use it
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          
+          # Tell Rust to download the Android compilation targets
+          $HOME/.cargo/bin/rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
 
       - name: Install Buildozer
         run: |
-          pip3 install --user --upgrade buildozer virtualenv "Cython==3.0.9"
+          pip3 install --user --upgrade buildozer virtualenv "Cython==3.0.9" setuptools-rust
 
       - name: Build APK with Buildozer
         run: |
