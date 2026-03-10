@@ -85,7 +85,7 @@ KV = '''
             Image:
                 source: 'CYPHER.png'
                 size_hint_y: None
-                height: '240dp'
+                height: '350dp' 
                 fit_mode: 'contain'
 
             Label:
@@ -101,7 +101,7 @@ KV = '''
                 hint_text: "YOUR NAME FOR REQUEST"
                 size_hint_y: None
                 height: '60dp'
-                background_color: utils.get_color_from_hex('#FEE2E9')
+                background_color: utils.get_color_from_hex('#FFE1F9')
                 foreground_color: utils.get_color_from_hex('#B4A7D6')
                 hint_text_color: utils.get_color_from_hex('#B4A7D6')
                 font_name: 'RobotoMono-Regular'
@@ -113,7 +113,7 @@ KV = '''
                 hint_text: "SECURE USERNAME"
                 size_hint_y: None
                 height: '60dp'
-                background_color: utils.get_color_from_hex('#FEE2E9')
+                background_color: utils.get_color_from_hex('#FFE1F9')
                 foreground_color: utils.get_color_from_hex('#B4A7D6')
                 hint_text_color: utils.get_color_from_hex('#B4A7D6')
                 font_name: 'RobotoMono-Regular'
@@ -156,7 +156,7 @@ KV = '''
                 hint_text: "ENTER VIP CODE"
                 size_hint_y: None
                 height: '60dp'
-                background_color: utils.get_color_from_hex('#FEE2E9')
+                background_color: utils.get_color_from_hex('#FFE1F9')
                 foreground_color: utils.get_color_from_hex('#B4A7D6')
                 hint_text_color: utils.get_color_from_hex('#B4A7D6')
                 font_name: 'RobotoMono-Regular'
@@ -193,17 +193,23 @@ KV = '''
     size_hint_y: None
     height: self.minimum_height
 
-    Image:
-        source: 'CYPHER.png'
+    BoxLayout:
+        orientation: 'vertical'
         size_hint_y: None
-        height: '250dp' 
-        fit_mode: 'contain'
+        height: self.minimum_height
+        spacing: '-30dp' 
 
-    Image:
-        source: 'Lock Lips.png'
-        size_hint_y: None
-        height: '75dp' 
-        fit_mode: 'contain'
+        Image:
+            source: 'CYPHER.png'
+            size_hint_y: None
+            height: '350dp' 
+            fit_mode: 'contain'
+
+        Image:
+            source: 'Lock Lips.png'
+            size_hint_y: None
+            height: '75dp' 
+            fit_mode: 'contain'
 
     TextInput:
         id: key_input
@@ -211,7 +217,7 @@ KV = '''
         hint_text: "SECRET KEY"
         size_hint_y: None
         height: '60dp'
-        background_color: utils.get_color_from_hex('#FEE2E9')
+        background_color: utils.get_color_from_hex('#FFE1F9')
         foreground_color: utils.get_color_from_hex('#B4A7D6')
         hint_text_color: utils.get_color_from_hex('#B4A7D6')
         font_name: 'RobotoMono-Regular'
@@ -223,7 +229,7 @@ KV = '''
         hint_text: "KEY HINT (Optional)"
         size_hint_y: None
         height: '60dp'
-        background_color: utils.get_color_from_hex('#FEE2E9')
+        background_color: utils.get_color_from_hex('#FFE1F9')
         foreground_color: utils.get_color_from_hex('#B4A7D6')
         hint_text_color: utils.get_color_from_hex('#B4A7D6')
         font_name: 'RobotoMono-Regular'
@@ -253,13 +259,12 @@ KV = '''
         hint_text: "YOUR MESSAGE"
         size_hint_y: None
         height: max(self.minimum_height, dp(100))
-        background_color: utils.get_color_from_hex('#FEE2E9')
+        background_color: utils.get_color_from_hex('#FFE1F9')
         foreground_color: utils.get_color_from_hex('#B4A7D6')
         hint_text_color: utils.get_color_from_hex('#B4A7D6')
         font_name: 'RobotoMono-Regular'
         font_size: '18sp'
         multiline: True
-        # THIS IS THE MAGIC SENSOR
         on_text: root.on_msg_text(self, self.text)
 
     Button:
@@ -334,7 +339,7 @@ KV = '''
         readonly: True
         size_hint_y: None
         height: max(self.minimum_height, dp(100))
-        background_color: utils.get_color_from_hex('#FEE2E9')
+        background_color: utils.get_color_from_hex('#FFE1F9')
         foreground_color: utils.get_color_from_hex('#B4A7D6')
         font_name: 'NotoEmoji-Regular.ttf'
         font_size: '18sp'
@@ -416,22 +421,15 @@ class MainScreen(Screen):
 class CypherLayout(BoxLayout):
     output_text = StringProperty("")
 
-    # --- THE BRACKET PARSER LOGIC ---
     def on_msg_text(self, instance, value):
         if "[" in value and "]" in value:
             try:
-                # Find the exact text trapped inside the brackets
                 start = value.find("[") + 1
                 end = value.find("]")
                 hint_line = value[start:end].strip()
-                
-                # Everything after the closing bracket is the emoji ciphertext
                 emoji_part = value[end+1:].strip()
                 
-                # Safely move the English text up to the Hint Box
                 self.ids.hint_input.text = hint_line
-                
-                # Instantly wipe the English text from the main box to kill the tofu
                 Clock.schedule_once(lambda dt: setattr(self.ids.msg_input, 'text', emoji_part), 0)
             except Exception:
                 pass
@@ -512,7 +510,6 @@ class CypherLayout(BoxLayout):
             
         cipher_text = " ".join(res_list)
         
-        # Format the output with the new bracket delimiters
         if hint:
             self.output_text = f"[{hint}]\n\n{cipher_text}"
         else:
