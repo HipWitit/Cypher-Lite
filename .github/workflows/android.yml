@@ -16,7 +16,7 @@ jobs:
 
       - name: Install Buildozer
         run: |
-          pip3 install --user --upgrade buildozer virtualenv "Cython<3.0"
+          pip3 install --user --upgrade buildozer virtualenv "Cython==3.0.9"
 
       - name: Build APK with Buildozer
         run: |
