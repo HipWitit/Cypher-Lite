@@ -254,7 +254,7 @@ KV = '''
         id: msg_input
         hint_text: "YOUR MESSAGE"
         size_hint_y: None
-        height: '100dp'
+        height: max(self.minimum_height, dp(100))
         background_color: utils.get_color_from_hex('#FEE2E9')
         foreground_color: utils.get_color_from_hex('#B4A7D6')
         hint_text_color: utils.get_color_from_hex('#B4A7D6')
@@ -333,7 +333,7 @@ KV = '''
         text: root.output_text
         readonly: True
         size_hint_y: None
-        height: '100dp'
+        height: max(self.minimum_height, dp(100))
         background_color: utils.get_color_from_hex('#FEE2E9')
         foreground_color: utils.get_color_from_hex('#B4A7D6')
         font_name: 'NotoEmoji-Regular.ttf'
