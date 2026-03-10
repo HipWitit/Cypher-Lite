@@ -1,4 +1,5 @@
 [app]
+# This is the name that will display on your phone's home screen
 title = Cypher Lite
 package.name = cypher
 package.domain = org.lilpeachbat
@@ -24,10 +25,12 @@ android.ndk = 25b
 # App Icon
 icon.filename = CYLI.png
 
+# Grant the app permission to send and receive data over the web
+android.permissions = INTERNET
+
 # THE BIG FIX: These lines ensure the Android bouncer lets you through
 android.accept_sdk_license = True
 android.skip_update = False
 
 [buildozer]
 log_level = 2
-
