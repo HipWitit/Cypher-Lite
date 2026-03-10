@@ -1,4 +1,4 @@
-Name: Build Cypher APK
+name: Build Cypher APK
 on: [push, pull_request]
 
 jobs:
